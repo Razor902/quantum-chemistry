@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>H2 on 4 Qubits — Interactive Schematic</title>
+<style>
+body{background:#0b0e1a;color:#e8e8f0;font-family:system-ui,sans-serif;margin:0;padding:18px}
+h1{color:#9fd0ff;font-size:1.25em;margin:0 0 4px}.sub{color:#8a8fa8;font-size:.85em;margin-bottom:12px}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.panel{background:#141a30;border:1px solid #2a3a66;border-radius:10px;padding:14px}
+.panel h2{color:#9fd0ff;font-size:.95em;margin:0 0 8px}
+input[type=range]{width:100%}
+.num{color:#ffe08a;font-variant-numeric:tabular-nums}
+button{background:#1d2a52;color:#e8e8f0;border:1px solid #3a5a9a;border-radius:8px;padding:10px 16px;font-size:1em;cursor:pointer}
+button:hover{background:#28407a}
+.bar-row{display:flex;align-items:center;gap:8px;margin:3px 0;font-size:.8em}
+.bar-label{width:118px;color:#b9c2e0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bar-track{flex:1;height:14px;background:#0b0e1a;border-radius:4px;overflow:hidden}
+.bar-fill{height:100%;background:linear-gradient(90deg,#3a7bd5,#7dff9a)}
+.bar-val{width:52px;text-align:right;color:#ffe08a}
+.qrow{display:flex;align-items:center;gap:10px;margin:8px 0}
+.qname{width:150px;font-size:.85em;color:#b9c2e0}
+.qwire{flex:1;height:26px;background:#0b0e1a;border:1px solid #2a3a66;border-radius:13px;position:relative;overflow:hidden}
+.qfill{position:absolute;left:0;top:0;bottom:0;background:linear-gradient(90deg,#7a2bd5,#3a7bd5);border-radius:13px}
+.qval{width:56px;text-align:right;color:#ffe08a;font-size:.85em}
+.foot{color:#8a8fa8;font-size:.78em;margin-top:14px;line-height:1.5}
+svg text{font-family:system-ui,sans-serif}
+.hint{color:#8a8fa8;font-size:.8em}
+</style></head>
+<body>
+<h1>H2 on 4 Qubits — Interactive Schematic</h1>
+<div class="sub">Each electron's possibilities mapped onto qubits (Jordan-Wigner). Drag the bond. Watch the wave function.</div>
+
+<div class="grid">
+<div class="panel"><h2>The molecule</h2>
+<svg id="mol" viewBox="0 0 400 150" width="100%"></svg>
+<label>Bond length: <span class="num" id="rval">0.74</span> Å</label>
+<input type="range" id="rslider" min="0" max="30" step="1" value="13">
+<div class="hint">0.40 – 3.00 Å. The energy minimum sits near 0.74 Å.</div>
+</div>
+
+<div class="panel"><h2>The bond's energy</h2>
+<svg id="curve" viewBox="0 0 400 210" width="100%"></svg>
+<div>Ground energy: <span class="num" id="eval">—</span> Ha</div>
+</div>
+
+<div class="panel"><h2>The four qubits (one per spin-orbital)</h2>
+<div id="qubits"></div>
+<div class="hint">Fill = probability that spin-orbital is occupied. The Z-string signs live in the phases between these.</div>
+</div>
+
+<div class="panel"><h2>The wave function — every possibility, weighted</h2>
+<div id="dets"></div>
+<button id="play">▶ Let the machine's own interference play</button>
+<div class="hint" id="playhint">Starts from |1100⟩ (both electrons home) and evolves under the true Hamiltonian.</div>
+</div>
+</div>
+
+<p class="foot">Built from real PySCF integrals (STO-3G); qubit energies match FCI to 8 decimals. Determinant labels read as |0α 0β 1α 1β⟩ occupancy.<br>© Crimson Rose LLC, Curtis Ray Dyess 2026-27</p>
+
+<script>
+const D = {"rs":[0.4,0.487,0.573,0.66,0.747,0.833,0.92,1.007,1.093,1.18,1.267,1.353,1.44,1.527,1.613,1.7,1.787,1.873,1.96,2.047,2.133,2.22,2.307,2.393,2.48,2.567,2.653,2.74,2.827,2.913,3.0],"energies":[-0.9141497046270832,-1.042191155999784,-1.1051281742545802,-1.1316763404102488,-1.137190336423263,-1.130549141488194,-1.1170142643875658,-1.0997383259131863,-1.0806906205471134,-1.0611966936728123,-1.042205123409963,-1.024397542456157,-1.0082326685948688,-0.9939737242779736,-0.9817173035878501,-0.9714266884583409,-0.96296771404355,-0.9561441399078848,-0.9507294013821042,-0.9464922155555168,-0.94321473937241,-0.9407033960501217,-0.9387935801230491,-0.9373499636010271,-0.9362641122888846,-0.9354507960697874,-0.93484395190515,-0.9343928698069269,-0.9340588782720842,-0.9338126131416791,-0.9336318445584986],"states":[{"R":0.4,"E":-0.9141497046270832,"amps":[[3,0.9982,0.0],[12,-0.0594,0.0]]},{"R":0.487,"E":-1.042191155999784,"amps":[[3,0.9975,0.0],[12,-0.07,0.0]]},{"R":0.573,"E":-1.1051281742545802,"amps":[[3,-0.9966,0.0],[12,0.0826,0.0]]},{"R":0.66,"E":-1.1316763404102488,"amps":[[3,-0.9953,0.0],[12,0.0972,0.0]]},{"R":0.747,"E":-1.137190336423263,"amps":[[3,-0.9935,0.0],[12,0.1139,0.0]]},{"R":0.833,"E":-1.130549141488194,"amps":[[3,-0.9912,0.0],[12,0.1327,0.0]]},{"R":0.92,"E":-1.1170142643875658,"amps":[[3,-0.9881,0.0],[12,0.1537,0.0]]},{"R":1.007,"E":-1.0997383259131863,"amps":[[3,-0.9842,0.0],[12,0.1772,0.0]]},{"R":1.093,"E":-1.0806906205471134,"amps":[[3,-0.9791,0.0],[12,0.2033,0.0]]},{"R":1.18,"E":-1.0611966936728123,"amps":[[3,-0.9727,0.0],[12,0.232,0.0]]},{"R":1.267,"E":-1.042205123409963,"amps":[[3,0.9648,0.0],[12,-0.2632,0.0]]},{"R":1.353,"E":-1.024397542456157,"amps":[[3,-0.9551,0.0],[12,0.2964,0.0]]},{"R":1.44,"E":-1.0082326685948688,"amps":[[3,-0.9436,0.0],[12,0.331,0.0]]},{"R":1.527,"E":-0.9939737242779736,"amps":[[3,-0.9305,0.0],[12,0.3663,0.0]]},{"R":1.613,"E":-0.9817173035878501,"amps":[[3,-0.9159,0.0],[12,0.4014,0.0]]},{"R":1.7,"E":-0.9714266884583409,"amps":[[3,0.9002,0.0],[12,-0.4354,0.0]]},{"R":1.787,"E":-0.96296771404355,"amps":[[3,-0.8839,0.0],[12,0.4677,0.0]]},{"R":1.873,"E":-0.9561441399078848,"amps":[[3,-0.8673,0.0],[12,0.4977,0.0]]},{"R":1.96,"E":-0.9507294013821042,"amps":[[3,0.8511,0.0],[12,-0.5251,0.0]]},{"R":2.047,"E":-0.9464922155555168,"amps":[[3,-0.8354,0.0],[12,0.5496,0.0]]},{"R":2.133,"E":-0.94321473937241,"amps":[[3,0.8207,0.0],[12,-0.5714,0.0]]},{"R":2.22,"E":-0.9407033960501217,"amps":[[3,-0.807,0.0],[12,0.5905,0.0]]},{"R":2.307,"E":-0.9387935801230491,"amps":[[3,-0.7946,0.0],[12,0.6072,0.0]]},{"R":2.393,"E":-0.9373499636010271,"amps":[[3,-0.7833,0.0],[12,0.6217,0.0]]},{"R":2.48,"E":-0.9362641122888846,"amps":[[3,0.7732,0.0],[12,-0.6342,0.0]]},{"R":2.567,"E":-0.9354507960697874,"amps":[[3,-0.7642,0.0],[12,0.645,0.0]]},{"R":2.653,"E":-0.93484395190515,"amps":[[3,0.7562,0.0],[12,-0.6543,0.0]]},{"R":2.74,"E":-0.9343928698069269,"amps":[[3,-0.7492,0.0],[12,0.6623,0.0]]},{"R":2.827,"E":-0.9340588782720842,"amps":[[3,-0.7431,0.0],[12,0.6692,0.0]]},{"R":2.913,"E":-0.9338126131416791,"amps":[[3,0.7377,0.0],[12,-0.6751,0.0]]},{"R":3.0,"E":-0.9336318445584986,"amps":[[3,0.7331,0.0],[12,-0.6801,0.0]]}],"evo_t":[0.0,1.0,2.0,3.0,4.0,5.0,6.0,7.0,8.0,9.0,10.0,11.0,12.0,13.0,14.0,15.0,16.0,17.0,18.0,19.0,20.0,21.0,22.0,23.0,24.0,25.0,26.0,27.0,28.0,29.0,30.0,31.0,32.0,33.0,34.0,35.0,36.0,37.0,38.0,39.0,40.0],"evo":[[[3,1.0,0.0]],[[3,0.9867,-0.0127],[12,-0.1174,-0.1117]],[[3,0.9747,0.0013],[12,-0.2231,0.0111]],[[3,0.9892,0.0125],[12,-0.0952,0.1106]],[[3,0.9998,-0.0025],[12,-0.0022,-0.0221]],[[3,0.9842,-0.0123],[12,-0.1393,-0.1084]],[[3,0.9752,0.0037],[12,-0.2187,0.0328]],[[3,0.9916,0.0119],[12,-0.0738,0.1051]],[[3,0.999,-0.0049],[12,-0.0087,-0.0432]],[[3,0.9819,-0.0114],[12,-0.1601,-0.1009]],[[3,0.9762,0.006],[12,-0.2102,0.0533]],[[3,0.9939,0.0108],[12,-0.0538,0.0956]],[[3,0.9978,-0.0071],[12,-0.0193,-0.0627]],[[3,0.9797,-0.0101],[12,-0.1791,-0.0893]],[[3,0.9776,0.0081],[12,-0.1977,0.0716]],[[3,0.9959,0.0093],[12,-0.0361,0.0822]],[[3,0.9962,-0.009],[12,-0.0334,-0.0798]],[[3,0.9779,-0.0084],[12,-0.1954,-0.0743]],[[3,0.9794,0.0099],[12,-0.1819,0.0871]],[[3,0.9976,0.0074],[12,-0.0213,0.0657]],[[3,0.9943,-0.0106],[12,-0.0507,-0.0937]],[[3,0.9764,-0.0064],[12,-0.2084,-0.0564]],[[3,0.9815,0.0112],[12,-0.1634,0.0992]],[[3,0.9989,0.0053],[12,-0.0101,0.0465]],[[3,0.992,-0.0118],[12,-0.0704,-0.1039]],[[3,0.9754,-0.0041],[12,-0.2176,-0.0362]],[[3,0.9838,0.0122],[12,-0.1428,0.1075]],[[3,0.9997,0.0029],[12,-0.003,0.0256]],[[3,0.9896,-0.0125],[12,-0.0917,-0.11]],[[3,0.9748,-0.0017],[12,-0.2227,-0.0147]],[[3,0.9863,0.0126],[12,-0.121,0.1115]],[[3,1.0,0.0004]],[[3,0.9871,-0.0127],[12,-0.1138,-0.1118]],[[3,0.9747,0.0008],[12,-0.2234,0.0075]],[[3,0.9888,0.0126],[12,-0.0988,0.1111]],[[3,0.9998,-0.0021],[12,-0.0015,-0.0185]],[[3,0.9846,-0.0124],[12,-0.1358,-0.1092]],[[3,0.9751,0.0033],[12,-0.2197,0.0293]],[[3,0.9913,0.012],[12,-0.0772,0.1063]],[[3,0.9992,-0.0045],[12,-0.0074,-0.0399]],[[3,0.9822,-0.0116],[12,-0.1569,-0.1024]]]};
+const QNAMES = ["q0 · orbital 0, spin up","q1 · orbital 0, spin down","q2 · orbital 1, spin up","q3 · orbital 1, spin down"];
+function detLabel(i){ const b=i.toString(2).padStart(4,"0"); const names={3:"|1100⟩ both home",12:"|0011⟩ both jumped",5:"|1010⟩ split up",10:"|0101⟩ split down",9:"|1001⟩ crossed",6:"|0110⟩ crossed"}; return (names[i]||("|"+b+"⟩")); }
+let cur = 13, playing=false, playTimer=null;
+
+function probs(idx){
+  const st = D.states[idx];
+  const p = new Array(16).fill(0);
+  st.amps.forEach(a=>{ p[a[0]] = a[1]*a[1]+a[2]*a[2]; });
+  return {E:st.E, p};
+}
+function drawMol(R){
+  const s=document.getElementById("mol"); const cx=200, spread=40+R*55;
+  s.innerHTML =
+   `<line x1="${cx-spread}" y1="75" x2="${cx+spread}" y2="75" stroke="#3a5a9a" stroke-width="3"/>`+
+   [cx-spread,cx+spread].map(x=>
+    `<circle cx="${x}" cy="75" r="26" fill="none" stroke="#7dff9a" stroke-width="1.5" opacity="0.7"/>
+     <circle cx="${x}" cy="75" r="7" fill="#ffd97d"/>
+     <text x="${x}" y="79" font-size="10" text-anchor="middle" fill="#0b0e1a">H</text>`).join("")+
+   `<text x="200" y="140" font-size="12" text-anchor="middle" fill="#8a8fa8">${R.toFixed(2)} Å apart — ${R<0.9?"squeezed":R<1.6?"bonded":"drifting apart"}</text>`;
+}
+function drawCurve(idx){
+  const s=document.getElementById("curve"), W=400,H=210,pad=34;
+  const rs=D.rs, es=D.energies;
+  const x0=Math.min(...rs),x1=Math.max(...rs),y0=Math.min(...es)-0.03,y1=Math.max(...es)+0.05;
+  const X=x=>pad+(x-x0)/(x1-x0)*(W-2*pad), Y=y=>H-pad-(y-y0)/(y1-y0)*(H-2*pad);
+  const path="M "+rs.map((r,i)=>`${X(r).toFixed(1)},${Y(es[i]).toFixed(1)}`).join(" L ");
+  const imin=es.indexOf(Math.min(...es));
+  s.innerHTML=`<path d="${path}" fill="none" stroke="#7dff9a" stroke-width="2"/>
+   <circle cx="${X(rs[imin]).toFixed(1)}" cy="${Y(es[imin]).toFixed(1)}" r="4" fill="#ffd97d"/>
+   <circle cx="${X(rs[idx]).toFixed(1)}" cy="${Y(es[idx]).toFixed(1)}" r="6" fill="none" stroke="#ff8d7d" stroke-width="2"/>
+   <text x="${X(rs[idx]).toFixed(0)}" y="20" font-size="11" fill="#ff8d7d" text-anchor="middle">you are here</text>`;
+}
+function render(idx){
+  const {E,p}=probs(idx), R=D.rs[idx];
+  document.getElementById("rval").textContent=R.toFixed(2);
+  document.getElementById("eval").textContent=E.toFixed(6);
+  drawMol(R); drawCurve(idx);
+  const qd=document.getElementById("qubits"); qd.innerHTML="";
+  for(let q=0;q<4;q++){ let occ=0; for(let i=0;i<16;i++) if((i>>q)&1) occ+=p[i];
+    qd.innerHTML+=`<div class="qrow"><div class="qname">${QNAMES[q]}</div><div class="qwire"><div class="qfill" style="width:${(occ*100).toFixed(1)}%"></div></div><div class="qval">${(occ*100).toFixed(1)}%</div></div>`; }
+  const dd=document.getElementById("dets"); dd.innerHTML="";
+  const order=[...Array(16).keys()].sort((a,b)=>p[b]-p[a]).slice(0,8);
+  order.forEach(i=>{ if(p[i]<0.0005) return;
+    dd.innerHTML+=`<div class="bar-row"><div class="bar-label">${detLabel(i)}</div><div class="bar-track"><div class="bar-fill" style="width:${(p[i]*100).toFixed(1)}%"></div></div><div class="bar-val">${(p[i]*100).toFixed(1)}%</div></div>`; });
+  }
+function renderEvo(f){
+  const fr=D.evo[f], p=new Array(16).fill(0);
+  fr.forEach(a=>{ p[a[0]]=a[1]*a[1]+a[2]*a[2]; });
+  const dd=document.getElementById("dets"); dd.innerHTML=`<div class="hint">t = ${D.evo_t[f]} (atomic units) — ${( (1-p[3])*100 ).toFixed(1)}% has flowed out of |1100⟩</div>`;
+  const order=[...Array(16).keys()].sort((a,b)=>p[b]-p[a]).slice(0,8);
+  order.forEach(i=>{ if(p[i]<0.0005) return;
+    dd.innerHTML+=`<div class="bar-row"><div class="bar-label">${detLabel(i)}</div><div class="bar-track"><div class="bar-fill" style="width:${(p[i]*100).toFixed(1)}%"></div></div><div class="bar-val">${(p[i]*100).toFixed(1)}%</div></div>`; });
+    const qd=document.getElementById("qubits"); qd.innerHTML="";
+  for(let q=0;q<4;q++){ let occ=0; for(let i=0;i<16;i++) if((i>>q)&1) occ+=p[i];
+    qd.innerHTML+=`<div class="qrow"><div class="qname">${QNAMES[q]}</div><div class="qwire"><div class="qfill" style="width:${(occ*100).toFixed(1)}%"></div></div><div class="qval">${(occ*100).toFixed(1)}%</div></div>`; }
+}
+document.getElementById("rslider").addEventListener("input",e=>{ stopPlay(); cur=parseInt(e.target.value); render(cur); });
+document.getElementById("play").addEventListener("click",()=>{
+  if(playing){ stopPlay(); render(cur); return; }
+  playing=true; document.getElementById("play").textContent="⏸ Stop";
+  let f=0; playTimer=setInterval(()=>{ renderEvo(f); f=(f+1)%D.evo.length; },220);
+});
+function stopPlay(){ playing=false; clearInterval(playTimer); document.getElementById("play").textContent="▶ Let the machine's own interference play"; }
+render(cur);
+</script></body></html>

@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>H2 on 4 Qubits — Dissociation Curve</title>
+<style>body{background:#0b0e1a;color:#e8e8f0;font-family:system-ui,sans-serif;margin:0;padding:20px}
+h1{color:#9fd0ff;font-size:1.3em}.panel{background:#141a30;border:1px solid #2a3a66;border-radius:10px;padding:16px;margin:14px 0}
+.foot{color:#8a8fa8;font-size:.8em;margin-top:14px}.num{color:#ffe08a}</style></head>
+<body><h1>H2 on 4 Qubits — the Bond, Played Out by Interference</h1>
+<div class="panel"><svg viewBox="0 0 640 420" width="100%">
+<line x1="55" y1="365" x2="585" y2="365" stroke="#2a3a66"/>
+<line x1="55" y1="55" x2="55" y2="365" stroke="#2a3a66"/><line x1="75" y1="365" x2="75" y2="371" stroke="#2a3a66"/><text x="75" y="385" fill="#8a8fa8" font-size="11" text-anchor="middle">0.5</text><line x1="177" y1="365" x2="177" y2="371" stroke="#2a3a66"/><text x="177" y="385" fill="#8a8fa8" font-size="11" text-anchor="middle">1</text><line x1="279" y1="365" x2="279" y2="371" stroke="#2a3a66"/><text x="279" y="385" fill="#8a8fa8" font-size="11" text-anchor="middle">1.5</text><line x1="381" y1="365" x2="381" y2="371" stroke="#2a3a66"/><text x="381" y="385" fill="#8a8fa8" font-size="11" text-anchor="middle">2</text><line x1="483" y1="365" x2="483" y2="371" stroke="#2a3a66"/><text x="483" y="385" fill="#8a8fa8" font-size="11" text-anchor="middle">2.5</text><line x1="585" y1="365" x2="585" y2="371" stroke="#2a3a66"/><text x="585" y="385" fill="#8a8fa8" font-size="11" text-anchor="middle">3</text>
+<path d="M 55.0,85.0 L 75.4,243.8 L 95.8,312.6 L 116.2,335.0 L 136.5,332.7 L 156.9,317.4 L 177.3,295.5 L 197.7,270.8 L 218.1,245.5 L 238.5,221.3 L 258.8,199.1 L 279.2,179.6 L 299.6,163.1 L 320.0,149.5 L 340.4,138.7 L 360.8,130.2 L 381.2,123.8 L 401.5,119.0 L 421.9,115.5 L 442.3,112.9 L 462.7,111.0 L 483.1,109.7 L 503.5,108.7 L 523.8,108.0 L 544.2,107.5 L 564.6,107.2 L 585.0,106.9" fill="none" stroke="#7dff9a" stroke-width="2.5"/>
+<circle cx="116.2" cy="335.0" r="5" fill="#ffd97d"/>
+<text x="116" y="321" fill="#ffd97d" font-size="12" text-anchor="middle">min -1.1362 Ha @ 0.70 A</text>
+<text x="585" y="412" fill="#8a8fa8" font-size="11" text-anchor="end">bond length (Angstrom)</text>
+<text x="14" y="47" fill="#8a8fa8" font-size="11">energy (Hartree)</text></svg></div>
+<p>Each electron's possibilities mapped onto 4 qubits (Jordan-Wigner); the 16-dimensional
+Hamiltonian diagonalized exactly. Qubit energy matches FCI to 8 decimals at every point.
+Dissociation limit: <span class="num">-0.9336 Ha</span> = two isolated H atoms.</p>
+<p class="foot">STO-3G minimal basis — qualitatively right, not chemically exact. The map is identical on a real quantum computer; only the stage changes.<br>&copy; Crimson Rose LLC, Curtis Ray Dyess 2026-27</p>
+</body></html>
